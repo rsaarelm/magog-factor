@@ -2,8 +2,8 @@
 
 USING: accessors arrays combinators combinators.short-circuit dust.com
 dust.gamestate dust.hex formatting kernel locals magog.com.creature
-magog.com.loc magog.com.view magog.offset math math.functions math.order
-math.parser random sequences splitting ;
+magog.com.loc magog.com.view magog.offset math math.constants math.functions
+math.order math.parser random sequences splitting ;
 
 IN: magog.rules
 
@@ -34,20 +34,18 @@ IN: magog.rules
 : find-enemy ( uid site -- uid/f )
     entities-at [ over swap enemy-of? ] find 2nip ;
 
-CONSTANT: skill-exponent-factor 5
+CONSTANT: skill-scale 5
 
-: skill>power ( skill -- power ) 2 swap skill-exponent-factor / ^ ;
+: cauchy-random ( mean scale -- n )
+    pi -.5 .5 uniform-random-float * tan * + ;
 
-: power>skill ( power -- skill ) log 2 1 skill-exponent-factor / ^ log / ;
+: scale-outcome ( outcome def -- 'outcome )
+    2 skill-scale * / * ;
 
-: roll ( skill -- power ) [ 0 ] dip skill>power uniform-random-float ;
-
-: (contest) ( winning-result losing-result -- outcome )
-    [ 1 max ] [ 0 max ] bi* - ;
-
-: contest ( attack-skill defense-skill -- outcome-skill )
-    [ roll power>skill ] bi@
-    2dup >= [ (contest) ceiling ] [ swap (contest) neg floor ] if >integer ;
+:: contest ( att def -- outcome-skill )
+    att def - skill-scale cauchy-random
+    def scale-outcome
+    def neg att clamp ceiling >integer ;
 
 : adjacent-enemy-dir? ( uid -- vec/f )
     dup >site neighbor-sites [ over swap find-enemy ] find drop nip
