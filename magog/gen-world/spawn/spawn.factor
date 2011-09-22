@@ -11,7 +11,8 @@ IN: magog.gen-world.spawn
     "pc" dup dup register-uid {
         [ "player" 48 COLOR: LightBlue <view> add-facet ]
         [ <creature> H{
-            { "body" 10 }
+            { "body" 5 }
+            { "defense" 5 }
             { "attack" 7 }
           } clone >>skills
           add-facet ]
@@ -22,7 +23,7 @@ IN: magog.gen-world.spawn
     new-uid dup {
         [ "a dreg" 51 COLOR: tan4 <view> add-facet ]
         [ <creature> H{
-            { "body" 2 }
+            { "defense" 1 }
             { "attack" 2 }
           } clone >>skills
           add-facet ]
@@ -32,8 +33,8 @@ IN: magog.gen-world.spawn
     new-uid dup {
         [ "a thrall" 54 COLOR: cyan4 <view> add-facet ]
         [ <creature> H{
-            { "body" 6 }
-            { "attack" 5 }
+            { "defense" 3 }
+            { "attack" 4 }
           } clone >>skills
           add-facet ]
     } cleave ;
@@ -42,7 +43,7 @@ IN: magog.gen-world.spawn
     new-uid dup {
         [ "a golem" 57 COLOR: SlateGray <view> add-facet ]
         [ <creature> H{
-            { "body" 13 }
+            { "defense" 8 }
             { "attack" 3 }
           } clone >>skills
           add-facet ]
@@ -52,8 +53,9 @@ IN: magog.gen-world.spawn
     new-uid dup {
         [ "a totem guardian" 60 COLOR: OrangeRed <view> add-facet ]
         [ <creature> H{
-            { "body" 9 }
-            { "attack" 7 }
+            { "body" 2 }
+            { "defense" 6 }
+            { "attack" 5 }
           } clone >>skills
           add-facet ]
     } cleave ;

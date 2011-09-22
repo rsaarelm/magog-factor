@@ -27,11 +27,10 @@ IN: magog.logic
     [ delete-entity ] if ;
 
 :: attack ( attacker-uid target-uid -- )
-    "attack" attacker-uid skill? "body" target-uid skill? contest :> damage
-    damage 0 >
-    [ damage "body" target-uid skill? dup 0 = [ drop 1 ] when / :> scaled
+    "attack" attacker-uid skill? "defense" target-uid skill? contest 0 >
+    [ 1 "body" target-uid skill? dup 0 = [ drop 1 ] when / :> scaled
       target-uid [ body>> scaled - ] [ -1 ] if-creature :> new-body
-      new-body 0 <
+      new-body 0 <=
       [ attacker-uid "kill" target-uid verbs-msg msg target-uid kill ]
       [ attacker-uid "hit" target-uid verbs-msg msg
         target-uid >creature? [ new-body >>body drop ] when* ] if
