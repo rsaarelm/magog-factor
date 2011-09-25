@@ -1,0 +1,1 @@
+Quad-edge data structure for map topology
