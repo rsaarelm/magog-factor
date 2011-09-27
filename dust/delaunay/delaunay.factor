@@ -1,7 +1,8 @@
 ! Copyright (C) 2011 Risto Saarelma
 
 USING: accessors arrays combinators dust.quadedge kernel locals math
-math.constants math.rectangles math.vectors sequences sets ;
+math.constants math.order math.rectangles math.vectors sequences sets sorting
+;
 
 IN: dust.delaunay
 
@@ -16,6 +17,12 @@ TUPLE: subdivision starting-edge edges ;
     bc sym ca splice
     ca sym ab splice
     ab { } clone subdivision boa ;
+
+:: enclosing-subdivision ( rect -- subdivision )
+    rect rect-bounds :> ( loc dim )
+    loc { 1 1 } v-
+    loc { 1 1 } v- dim { 2 0 } v* { 2 0 } v+ v+
+    loc { 1 1 } v- dim { 0 2 } v* { 0 2 } v+ v+ <subdivision> ;
 
 ! Add a new edge going from the destination of a to the origin of b.
 :: connect ( edge-a edge-b -- edge )
@@ -132,6 +139,9 @@ TUPLE: subdivision starting-edge edges ;
 
 : vertices ( subdivision -- seq )
     edges>> [ [ orig ] [ dest ] bi 2array ] map concat members ;
+
+: edges ( subdivision -- seq )
+    edges>> [ [ orig ] [ dest ] bi 2array [ <=> ] sort ] map members ;
 
 : bounding-rect ( subdivision -- rect )
     vertices [ f ]
