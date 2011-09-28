@@ -96,6 +96,8 @@ TUPLE: subdivision starting-edge edges ;
     [ starting-edge>> ] dip (find-containing) ;
 
 :: insert-vertex ( subdivision parent-edge p -- edge )
+    subdivision edges>> length 3 + :> iter-limit!
+
     <edge> :> base!
     subdivision [ base prefix ] change-edges drop
     parent-edge :> e!
@@ -103,7 +105,10 @@ TUPLE: subdivision starting-edge edges ;
     base e orig p set-points
     base e splice
     [ e dest start-point = ]
-    [ e base sym connect base!
+    [ iter-limit 1 - iter-limit!
+      iter-limit 0 < [ "insert-vertex fails to converge" throw ] when
+
+      e base sym connect base!
       subdivision [ base prefix ] change-edges drop
       base orig-prev e!
     ] do until
