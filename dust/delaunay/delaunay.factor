@@ -6,9 +6,9 @@ math.constants math.order math.rectangles math.vectors sequences sets sorting
 
 IN: dust.delaunay
 
-TUPLE: subdivision starting-edge edges ;
+TUPLE: delaunay starting-edge edges ;
 
-:: <subdivision> ( a b c -- subdivision )
+:: <delaunay> ( a b c -- delaunay )
     <edge> <edge> <edge> :> ( ab bc ca )
     ab a b set-points
     bc b c set-points
@@ -16,13 +16,13 @@ TUPLE: subdivision starting-edge edges ;
     ab sym bc splice
     bc sym ca splice
     ca sym ab splice
-    ab { } clone subdivision boa ;
+    ab { } clone delaunay boa ;
 
-:: enclosing-subdivision ( rect -- subdivision )
+:: enclosing-delaunay ( rect -- delaunay )
     rect rect-bounds :> ( loc dim )
     loc { 1 1 } v-
     loc { 1 1 } v- dim { 2 0 } v* { 2 0 } v+ v+
-    loc { 1 1 } v- dim { 0 2 } v* { 0 2 } v+ v+ <subdivision> ;
+    loc { 1 1 } v- dim { 0 2 } v* { 0 2 } v+ v+ <delaunay> ;
 
 ! Add a new edge going from the destination of a to the origin of b.
 :: connect ( edge-a edge-b -- edge )
@@ -92,14 +92,14 @@ TUPLE: subdivision starting-edge edges ;
        [ edge ]
    } cond ;
 
-: find-containing ( subdivision p -- edge )
+: find-containing ( delaunay p -- edge )
     [ starting-edge>> ] dip (find-containing) ;
 
-:: insert-vertex ( subdivision parent-edge p -- edge )
-    subdivision edges>> length 3 + :> iter-limit!
+:: insert-vertex ( delaunay parent-edge p -- edge )
+    delaunay edges>> length 3 + :> iter-limit!
 
     <edge> :> base!
-    subdivision [ base prefix ] change-edges drop
+    delaunay [ base prefix ] change-edges drop
     parent-edge :> e!
     parent-edge orig :> start-point
     base e orig p set-points
@@ -109,12 +109,12 @@ TUPLE: subdivision starting-edge edges ;
       iter-limit 0 < [ "insert-vertex fails to converge" throw ] when
 
       e base sym connect base!
-      subdivision [ base prefix ] change-edges drop
+      delaunay [ base prefix ] change-edges drop
       base orig-prev e!
     ] do until
     base orig-prev ;
 
-:: check-edges ( subdivision parent-edge p edge -- )
+:: check-edges ( delaunay parent-edge p edge -- )
     edge :> e!
     t :> running!
     [ running ]
@@ -129,26 +129,26 @@ TUPLE: subdivision starting-edge edges ;
         [ e orig-next left-prev e! ]
       } cond ] while ;
 
-:: insert ( subdivision p -- subdivision )
-    subdivision p find-containing :> edge!
+:: insert ( delaunay p -- delaunay )
+    delaunay p find-containing :> edge!
     p edge orig = p edge dest = or [
         edge p on-edge? [
             edge orig-prev edge!
             edge orig-next remove-edge
-            subdivision [ edge orig-next swap remove-eq ] change-edges drop
+            delaunay [ edge orig-next swap remove-eq ] change-edges drop
         ] when
-        subdivision edge p insert-vertex :> e
-        subdivision edge p e check-edges
+        delaunay edge p insert-vertex :> e
+        delaunay edge p e check-edges
     ] unless
-    subdivision ;
+    delaunay ;
 
-: vertices ( subdivision -- seq )
+: vertices ( delaunay -- seq )
     edges>> [ [ orig ] [ dest ] bi 2array ] map concat members ;
 
-: edges ( subdivision -- seq )
+: edges ( delaunay -- seq )
     edges>> [ [ orig ] [ dest ] bi 2array [ <=> ] sort ] map members ;
 
-: bounding-rect ( subdivision -- rect )
+: bounding-rect ( delaunay -- rect )
     vertices [ f ]
     [ [ unclip [ vmin ] reduce ] [ unclip [ vmax ] reduce ] bi
       over v- <rect> ] if-empty ;

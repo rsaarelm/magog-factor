@@ -6,7 +6,7 @@ ui.gadgets.panes ui.render ;
 
 IN: dust.delaunay.vis
 
-TUPLE: delaunay-gadget < gadget subdivision bounding-rect ;
+TUPLE: delaunay-gadget < gadget delaunay bounding-rect ;
 
 M: delaunay-gadget pref-dim* drop { 256 256 } ;
 
@@ -24,18 +24,18 @@ CONSTANT: node-radius { 2 2 }
 M:: delaunay-gadget draw-gadget* ( gadget -- )
     COLOR: black gl-color
     gadget dim>> { 0 0 } swap gl-rect
-    gadget subdivision>> edges
+    gadget delaunay>> edges
     [ first2 { 1 1 } draw-arc ] each
     ;
 
-: subdivision. ( subdivision -- )
-    delaunay-gadget new swap >>subdivision gadget. ;
+: delaunay. ( delaunay -- )
+    delaunay-gadget new swap >>delaunay gadget. ;
 
-: demo-subdivision ( -- subdivision )
-    { 0 0 } { 256 256 } <rect> enclosing-subdivision ;
+: demo-delaunay ( -- delaunay )
+    { 0 0 } { 256 256 } <rect> enclosing-delaunay ;
 
 : random-point ( -- p )
     1 255 [a,b] random 1 255 [a,b] random 2array ;
 
 : demo ( -- )
-    demo-subdivision 1000 [ random-point insert ] times subdivision. ;
+    demo-delaunay 1000 [ random-point insert ] times delaunay. ;
