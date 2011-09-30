@@ -1,12 +1,12 @@
 ! Copyright (C) 2011 Risto Saarelma
 
-USING: accessors arrays combinators dust.quadedge kernel locals math
+USING: accessors arrays combinators dust.quadedge fry kernel locals math
 math.constants math.order math.rectangles math.vectors sequences sets sorting
 ;
 
 IN: dust.delaunay
 
-TUPLE: delaunay starting-edge edges ;
+TUPLE: delaunay starting-edge edges support-edges ;
 
 :: <delaunay> ( a b c -- delaunay )
     <edge> <edge> <edge> :> ( ab bc ca )
@@ -16,13 +16,16 @@ TUPLE: delaunay starting-edge edges ;
     ab sym bc splice
     bc sym ca splice
     ca sym ab splice
-    ab { } clone delaunay boa ;
+    ab { } ab bc ca 3array delaunay boa ;
 
 :: enclosing-delaunay ( rect -- delaunay )
     rect rect-bounds :> ( loc dim )
     loc { 1 1 } v-
     loc { 1 1 } v- dim { 2 0 } v* { 2 0 } v+ v+
     loc { 1 1 } v- dim { 0 2 } v* { 0 2 } v+ v+ <delaunay> ;
+
+: support-edge? ( edge delaunay -- ? )
+    support-edges>> [ over eq? ] any? nip ;
 
 ! Add a new edge going from the destination of a to the origin of b.
 :: connect ( edge-a edge-b -- edge )
@@ -51,6 +54,14 @@ TUPLE: delaunay starting-edge edges ;
     b norm-sq a c p tri-area * -
     c norm-sq a b p tri-area * +
     p norm-sq a b c tri-area * - 0 > ;
+
+:: circumcircle-center ( a b c -- p )
+    b a v- first2 :> ( bx by )
+    c a v- first2 :> ( cx cy )
+    bx cy * by cx * - 2 * :> d
+    bx bx * by by * + cy * cx cx * cy cy * + by * - d /
+    cx cx * cy cy * + bx * bx bx * by by * + cx * - d /
+    2array a v+ ;
 
 : ccw? ( a b c -- ? ) tri-area 0 > ;
 
@@ -146,9 +157,25 @@ TUPLE: delaunay starting-edge edges ;
     edges>> [ [ orig ] [ dest ] bi 2array ] map concat members ;
 
 : edges ( delaunay -- seq )
-    edges>> [ [ orig ] [ dest ] bi 2array [ <=> ] sort ] map members ;
+    dup edges>> [ over support-edges>> in? not ] filter nip ;
 
-: bounding-rect ( delaunay -- rect )
-    vertices [ f ]
-    [ [ unclip [ vmin ] reduce ] [ unclip [ vmax ] reduce ] bi
-      over v- <rect> ] if-empty ;
+<PRIVATE
+
+: rotate ( seq -- seq' ) unclip suffix ;
+
+: (normalize-cycle) ( elt-idx-ord-seq -- smallest-idx )
+    [ ] [ 2array [ [ third ] bi@ <=> ] sort first ] map-reduce second ;
+
+: normalize-cycle ( seq ord-quot -- seq' )
+    '[ over _ call 3array ] dupd map-index
+    (normalize-cycle) [ rotate ] times ; inline
+
+PRIVATE>
+
+: faces ( delaunay -- seq )
+    dup edges>> [ left-face-edges ] map
+    ! Faces with a support edge aren't considered real
+    [ over [ support-edge? ] curry any? not ] filter nip
+    ! At this point we have many duplicates since the iteration made a
+    ! separate face for each edge, normalize and prune to get the result.
+    [ [ orig ] normalize-cycle ] map members ;

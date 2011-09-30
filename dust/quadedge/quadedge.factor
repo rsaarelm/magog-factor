@@ -1,10 +1,16 @@
 ! Copyright (C) 2011 Risto Saarelma
 
-USING: accessors kernel locals ;
+USING: accessors kernel locals sequences ;
 
 IN: dust.quadedge
 
 TUPLE: edge next turn sym data ;
+
+! XXX: Cannot use the default equal? since it recurses into the structure and
+! quadedges often have reference cycles. Instead of doing something very
+! clever with graph comparisons, just overriding this to look at the memory
+! address.
+M: edge equal? eq? ;
 
 ! Using "turn" instead of the "rot" found in literature in order not to clash
 ! with Factor combinator conventions.
@@ -59,3 +65,12 @@ TUPLE: edge next turn sym data ;
 :: remove-edge ( edge -- )
     edge edge orig-prev splice
     edge sym edge sym orig-prev splice ;
+
+:: edge-loop ( start-edge quot -- seq )
+    start-edge quot call
+    [ dup start-edge eq? not ] [ dup quot call swap ] produce
+    nip start-edge prefix ; inline
+
+: left-face-edges ( start-edge -- seq ) [ left-next ] edge-loop ;
+
+: right-face-edges ( start-edge -- seq ) sym left-face-edges ;
