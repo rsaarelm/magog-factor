@@ -153,11 +153,20 @@ TUPLE: delaunay starting-edge edges support-edges ;
     ] unless
     delaunay ;
 
-: vertices ( delaunay -- seq )
-    edges>> [ [ orig ] [ dest ] bi 2array ] map concat members ;
+: dual-vertices ( edge -- left-p right-p )
+    [ left-face-edges ] [ right-face-edges ] bi
+    [ dup length 3 >=
+      [ [ orig ] map first3 circumcircle-center ] [ drop f ] if ]
+    bi@ ;
 
 : edges ( delaunay -- seq )
     dup edges>> [ over support-edges>> in? not ] filter nip ;
+
+: vertices ( delaunay -- seq )
+    edges [ orig ] map members ;
+
+: generate-dual-vertices ( delaunay -- )
+    edges [ [ turn ] [ ] bi dual-vertices set-points ] each ;
 
 <PRIVATE
 
