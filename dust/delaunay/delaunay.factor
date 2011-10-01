@@ -25,7 +25,8 @@ TUPLE: delaunay starting-edge edges support-edges ;
     loc { 1 1 } v- dim { 0 2 } v* { 0 2 } v+ v+ <delaunay> ;
 
 : support-edge? ( edge delaunay -- ? )
-    support-edges>> [ over eq? ] any? nip ;
+    [ [ orig ] [ dest ] bi 2array ]
+    [ support-edges>> [ orig ] map ] bi* intersects? ;
 
 ! Add a new edge going from the destination of a to the origin of b.
 :: connect ( edge-a edge-b -- edge )
@@ -160,10 +161,10 @@ TUPLE: delaunay starting-edge edges support-edges ;
     bi@ ;
 
 : edges ( delaunay -- seq )
-    dup edges>> [ over support-edges>> in? not ] filter nip ;
+    dup edges>> [ over support-edge? not ] filter nip ;
 
 : vertices ( delaunay -- seq )
-    edges [ orig ] map members ;
+    edges [ [ orig ] [ dest ] bi 2array ] map concat members ;
 
 : generate-dual-vertices ( delaunay -- )
     edges [ [ turn ] [ ] bi dual-vertices set-points ] each ;
