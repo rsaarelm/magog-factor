@@ -49,7 +49,7 @@ CONSTANT: SDL_FULLSCREEN HEX: 80000000
 <<
 "sdl" {
     { [ os winnt? ] [ "SDL.dll" ] }
-    { [ os macosx? ] [ "SDL.dynlib" ] }
+    { [ os macosx? ] [ "SDL.dylib" ] }
     { [ os unix? ] [ "SDL.so" ] }
 } cond cdecl add-library
 >>
