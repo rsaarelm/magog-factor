@@ -1,12 +1,39 @@
 ! Copyright (C) 2011 Risto Saarelma
 
-USING: accessors arrays combinators dust.quadedge fry kernel locals math
-math.constants math.order math.rectangles math.vectors sequences sets sorting
-;
+USING: accessors arrays assocs circular combinators dust.quadedge fry kernel
+locals math math.constants math.order math.rectangles math.vectors sequences
+sets sorting ;
 
 IN: dust.delaunay
 
 TUPLE: delaunay starting-edge edges support-edges ;
+
+:: polygon-area ( points -- a )
+    points <circular> :> points
+    points length iota [| i |
+        i points nth first2 :> ( x_i y_i )
+        i 1 + points nth first2 :> ( x_i+1 y_i+1 )
+        x_i y_i+1 * x_i+1 y_i * -
+    ] map sum 1/2 * ;
+
+:: (centroid) ( points -- center )
+    1 points polygon-area 6 * / :> c
+    points <circular> :> points
+    points length iota [| i |
+        i points nth first2 :> ( x_i y_i )
+        i 1 + points nth first2 :> ( x_i+1 y_i+1 )
+        x_i x_i+1 + x_i y_i+1 * x_i+1 y_i * - *
+        y_i y_i+1 + x_i y_i+1 * x_i+1 y_i * - *
+        2array c v*n
+    ] map { 0 0 } [ v+ ] binary-reduce ;
+
+: centroid ( points -- center )
+    {
+        { [ dup empty? ] [ drop f ] }
+        { [ dup length 1 = ] [ first ] }
+        { [ dup length 2 = ] [ first2 v+ 1/2 v*n ] }
+        [ (centroid) ]
+    } cond ;
 
 :: <delaunay> ( a b c -- delaunay )
     <edge> <edge> <edge> :> ( ab bc ca )
@@ -169,6 +196,15 @@ TUPLE: delaunay starting-edge edges support-edges ;
 
 : generate-dual-vertices ( delaunay -- )
     edges [ [ turn ] [ ] bi dual-vertices set-points ] each ;
+
+: voronoi-cell ( edge -- seq ) turn left-face-edges
+    dup [ orig ] all? [ drop f ] unless ;
+
+:: relaxed-vertices ( delaunay -- seq )
+    delaunay generate-dual-vertices
+    delaunay edges [| edge |
+        edge voronoi-cell [ orig ] map [ edge orig ] [ centroid ] if-empty
+    ] map ;
 
 <PRIVATE
 

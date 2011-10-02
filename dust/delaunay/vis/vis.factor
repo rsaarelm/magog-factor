@@ -1,8 +1,9 @@
 ! Copyright (C) 2011 Risto Saarelma
 
-USING: accessors arrays colors.constants dust.delaunay dust.quadedge kernel
-locals math math.ranges math.rectangles math.vectors namespaces opengl
-opengl.gl random sequences ui.gadgets ui.gadgets.panes ui.render ;
+USING: accessors arrays colors.constants combinators.short-circuit
+dust.delaunay dust.quadedge kernel locals math math.ranges math.rectangles
+math.vectors namespaces opengl random sequences sets ui.gadgets
+ui.gadgets.panes ui.render ;
 
 IN: dust.delaunay.vis
 
@@ -48,13 +49,24 @@ M:: graph-gadget draw-gadget* ( gadget -- )
     <graph-gadget> gadget. ;
 
 : random-point ( -- p )
-    1 255 [a,b] random 1 255 [a,b] random 2array ;
+    1 255 [a,b] random >float 1 255 [a,b] random >float 2array ;
 
 SYMBOL: demo-point-n
+
+: empty-delaunay ( -- delaunay )
+    { 0 0 } { 256 256 } <rect> enclosing-delaunay ;
 
 : demo-delaunay ( -- delaunay )
     { 0 0 } { 256 256 } <rect> enclosing-delaunay
     demo-point-n get [ 100 ] unless* [ random-point insert ] times ;
+
+: valid-point? ( p -- ? )
+    { [ { 1 1 } v>= [ ] all? ] [ { 255 255 } v< [ ] all? ] } 1&& ;
+
+! XXX: Fractional points lead to breakage in the lib.
+: relax ( delaunay -- delaunay )
+    relaxed-vertices [ valid-point? ] filter [ [ >integer ] map ] map members
+    empty-delaunay swap [ insert ] each ;
 
 : demo ( -- )
     demo-delaunay delaunay. ;
