@@ -184,9 +184,15 @@ TUPLE: delaunay starting-edge edges support-edges ;
 PRIVATE>
 
 : faces ( delaunay -- seq )
-    dup edges>> [ left-face-edges ] map
-    ! Faces with a support edge aren't considered real
-    [ over [ support-edge? ] curry any? not ] filter nip
+    edges>> [ left-face-edges ] map
     ! At this point we have many duplicates since the iteration made a
     ! separate face for each edge, normalize and prune to get the result.
     [ [ orig ] normalize-cycle ] map members ;
+
+:: validate ( delaunay -- )
+    delaunay faces [ length 3 >= ] filter :> faces
+    delaunay vertices :> vertices
+    faces [| face | vertices [| vertex |
+        face [ orig ] map first3 vertex
+        in-circle? [ "Vertex in circle" throw ] when
+    ] each ] each ;
