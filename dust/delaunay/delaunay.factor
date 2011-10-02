@@ -107,7 +107,7 @@ TUPLE: delaunay starting-edge edges support-edges ;
 : find-containing ( delaunay p -- edge )
     [ starting-edge>> ] dip (find-containing) ;
 
-:: insert-vertex ( delaunay parent-edge p -- edge )
+:: insert-vertex ( delaunay parent-edge p -- )
     delaunay edges>> length 3 + :> iter-limit!
 
     <edge> :> base!
@@ -116,7 +116,8 @@ TUPLE: delaunay starting-edge edges support-edges ;
     parent-edge orig :> start-point
     base e orig p set-points
     base e splice
-    [ e dest start-point = ]
+    base :> starting-edge
+    [ e left-next starting-edge eq? ]
     [ iter-limit 1 - iter-limit!
       iter-limit 0 < [ "insert-vertex fails to converge" throw ] when
 
@@ -124,20 +125,21 @@ TUPLE: delaunay starting-edge edges support-edges ;
       delaunay [ base prefix ] change-edges drop
       base orig-prev e!
     ] do until
-    base orig-prev ;
 
-:: check-edges ( delaunay parent-edge p edge -- )
-    edge :> e!
+    ! Check if we need to flip edges.
+    delaunay edges>> length 3 + iter-limit!
     t :> running!
     [ running ]
-    [ e orig-prev :> u
+    [ iter-limit 1 - iter-limit!
+      iter-limit 0 < [ "edge flip check fails to converge" throw ] when
+      e orig-prev :> u
       { { [ e u dest right-of?
             e orig u dest e dest p in-circle? and ]
           [
               e flip
-              u e!
+              e orig-prev e!
           ] }
-        { [ e orig parent-edge orig = ] [ f running! ] }
+        { [ e orig-next starting-edge = ] [ f running! ] }
         [ e orig-next left-prev e! ]
       } cond ] while ;
 
@@ -149,8 +151,7 @@ TUPLE: delaunay starting-edge edges support-edges ;
             edge orig-next remove-edge
             delaunay [ edge orig-next swap remove-eq ] change-edges drop
         ] when
-        delaunay edge p insert-vertex :> e
-        delaunay edge p e check-edges
+        delaunay edge p insert-vertex
     ] unless
     delaunay ;
 
