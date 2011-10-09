@@ -225,6 +225,10 @@ PRIVATE>
     ! separate face for each edge, normalize and prune to get the result.
     [ [ orig ] normalize-cycle ] map members ;
 
+: voronoi-faces ( delaunay -- seq )
+    edges>> [ turn left-face-edges ] map
+    [ [ orig ] normalize-cycle ] map members ;
+
 :: validate ( delaunay -- )
     delaunay faces [ length 3 >= ] filter :> faces
     delaunay vertices :> vertices
