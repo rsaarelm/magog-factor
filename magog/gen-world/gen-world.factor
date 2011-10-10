@@ -6,8 +6,8 @@ QUALIFIED: sets
 
 USING: accessors arrays assocs combinators combinators.short-circuit dust.geom
 fry hash-sets kernel literals locals magog.areautil magog.gen-world.chunks
-magog.gen-world.spawn magog.rules math math.ranges math.vectors memoize
-namespaces random sequences ;
+magog.gen-world.spawn magog.overworld magog.rules math math.ranges
+math.vectors memoize namespaces random sequences ;
 
 IN: magog.gen-world
 
@@ -256,6 +256,8 @@ CONSTANT: chunks-per-level 32
 
 :: init-world ( -- )
     [
+        <overworld-graph> :> overworld
+        overworld generate-overworld
         starting-chunk starting-loc place-chunk
         0 -8 [a,b] [ generate-level ] each
     ] with-mapgen
