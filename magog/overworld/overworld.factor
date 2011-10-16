@@ -36,14 +36,7 @@ CONSTANT: region-to-chunk-transform
 : noise-adjust ( region-loc -- n )
     hex-dist overworld-radius / 2 * 1 swap - ;
 
-PRIVATE>
-
-: <overworld-graph> ( -- hexgraph )
-    <hexgraph>
-    overworld-radius iota [ hex-circle ] map concat
-    [ over add-hex ] each ;
-
-:: generate-overworld ( hexgraph -- )
+:: generate-terrain ( hexgraph -- )
     <perlin-noise-table> :> table
     hexgraph faces [ hexgraph on-edge? ] partition :> ( edge inner )
     edge [ [ ocean-region ] dip hexgraph set-at ] each
@@ -51,6 +44,31 @@ PRIVATE>
         table loc loc>perlin perlin-noise loc noise-adjust + 0 >
           [ grass-region ] [ ocean-region ] if
         loc hexgraph set-at ] each ;
+
+! XXX: Just picking an arbitrary face to fill the edge as, make a more
+! detailed rule for this later.
+:: fill-borders ( hexgraph -- )
+    hexgraph edges [| edge |
+        edge hexgraph sides first hexgraph at
+        edge hexgraph set-at ] each ;
+
+:: fill-corners ( hexgraph -- )
+    hexgraph vertices [| vertex |
+        vertex hexgraph touching first hexgraph at
+        vertex hexgraph set-at ] each ;
+
+PRIVATE>
+
+: <overworld-graph> ( -- hexgraph )
+    <hexgraph>
+    overworld-radius iota [ hex-circle ] map concat
+    [ over add-hex ] each ;
+
+: generate-overworld ( hexgraph -- )
+    { [ generate-terrain ]
+      [ fill-borders ]
+      [ fill-corners ]
+    } cleave ;
 
 <PRIVATE
 
@@ -92,3 +110,11 @@ PRIVATE>
       [ "Invalid hexgraph key" throw ]
     } case
     swap [ v+ ] curry map ;
+
+! The ring of chunk locs surrounding the central face of the region. Should be
+! the union of the borders and corners of the face.
+: perimeter ( region-loc -- chunk-loc-seq )
+    chunk-translate region-radius hex-circle [ over v+ ] map nip ;
+
+: inside-perimeter ( region-loc -- chunk-loc-seq )
+    chunk-translate region-radius 1 - hex-circle [ over v+ ] map nip ;
