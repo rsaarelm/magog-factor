@@ -9,7 +9,53 @@ CONSTANT: chunk-dim { 5 5 }
 ! XXX There needs to be an empty line after each ASCIIMAP: definition due to a
 ! bug in the multiline parsing code. It should be fixed in trunk.
 
-CONSTANT: chunks {
+CONSTANT: water-chunks {
+ASCIIMAP:
+??????
+?~~~~~?
+?~~~~~?
+?~~~~~?
+?~~~~~?
+?~~~~~?
+ ??????
+;
+
+}
+
+CONSTANT: water-ground-chunks {
+ASCIIMAP:
+111111
+~.....1
+~~....1
+~~~...1
+~~~~..1
+~~~~~.1
+ ~~~~~1
+;
+
+ASCIIMAP:
+1~~~~~
+1~~~~~~
+1.~~~~~
+1..~~~~
+1...~~~
+1....~~
+ 111111
+;
+
+ASCIIMAP:
+??????
+?.....?
+?.....?
+?.....?
+?.....?
+?.....?
+ ??????
+;
+
+}
+
+CONSTANT: natural-chunks {
 ASCIIMAP:
 111111
 1.....1
@@ -80,6 +126,9 @@ ASCIIMAP:
  000000
 ;
 
+}
+
+CONSTANT: stairwell-chunks {
 ASCIIMAP:
 111111
 1.###.1
@@ -100,37 +149,19 @@ ASCIIMAP:
  111111
 ;
 
-ASCIIMAP:
-111111
-~.....1
-~~....1
-~~~...1
-~~~~..1
-~~~~~.1
- ~~~~~1
-;
-
-ASCIIMAP:
-1~~~~~
-1~~~~~~
-1.~~~~~
-1..~~~~
-1...~~~
-1....~~
- 111111
-;
-
-ASCIIMAP:
-~~~~~~
-~~~~~~~
-~~~~~~~
-~~~~~~~
-~~~~~~~
-~~~~~~~
- ~~~~~~
-;
-
 }
+
+CONSTANT: fallback-chunk
+ASCIIMAP:
+000000
+0#####0
+0#####0
+0#####0
+0#####0
+0#####0
+ 000000
+;
+
 
 CONSTANT: edge-chunk
 ASCIIMAP:

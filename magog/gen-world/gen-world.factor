@@ -4,10 +4,11 @@ QUALIFIED-WITH: magog.tile tile
 
 QUALIFIED: sets
 
-USING: accessors arrays assocs combinators dust.geom hash-sets kernel locals
-magog.areautil magog.gen-world.chunk magog.gen-world.chunks
-magog.gen-world.spawn magog.overworld magog.rules math math.ranges
-math.vectors namespaces random sequences ;
+USING: accessors arrays assocs combinators combinators.short-circuit dust.geom
+dust.hexgraph hash-sets kernel locals magog.areautil magog.gen-world.biome
+magog.gen-world.chunk magog.gen-world.chunks magog.gen-world.spawn
+magog.overworld magog.rules math math.ranges math.vectors namespaces random
+sequences ;
 
 IN: magog.gen-world
 
@@ -22,28 +23,38 @@ TUPLE: slot edges ;
 TUPLE: mapgen shape biome slots ;
 
 : <mapgen> ( shape biome -- mapgen )
-    H{ } clone mapgen boa
-    <slot> starting-loc pick slots>> set-at ;
+    H{ } clone mapgen boa ;
 
 SYMBOL: +mapgen+
 SYMBOL: +placed-chunks+
 
 : get-mapgen ( -- mapgen ) +mapgen+ get ;
 
+: current-biome ( -- biome ) get-mapgen biome>> ;
+
 : get-placed ( -- placed-chunks ) +placed-chunks+ get ;
+
+: within-shape? ( loc -- ? ) get-mapgen shape>> member? ;
 
 : clear? ( loc -- ? ) get-placed key? not ;
 
+:: slot-edge ( loc slot-edge -- edge/f )
+    loc slot-edge v+ :> neighbor-loc
+    neighbor-loc get-placed at
+    [ slot-edge opposite edge ]
+    [ neighbor-loc within-shape? slot-edge horizontal? not or [ f ] [ current-biome default-edge ] if
+    ] if* ;
+
 :: set-initial-edges ( slot loc -- )
     dirs [| dir |
-        loc dir v+ get-placed at
-        [ dir opposite edge dir slot edges>> set-at ] when*
+        loc dir slot-edge [ dir slot edges>> set-at ] when*
     ] each ;
 
 ! If there is a slot at loc, return it. If loc is empty, generate one and
-! return it. If loc has already a chunk in it, return f.
+! return it. If loc has already a chunk in it or is outside the current
+! shape, return f.
 :: gen-slot ( loc -- slot/f )
-    loc clear?
+    loc clear? loc within-shape? and
     [ loc get-mapgen slots>> at
       [ <slot> dup loc get-mapgen slots>> set-at
         dup loc set-initial-edges ] unless*
@@ -73,7 +84,7 @@ PRIVATE>
     slot [
         slot edges>> >alist [
             first2 :> ( dir e )
-            chunk dir edge e = ] all?
+            chunk dir edge e edges-match? ] all?
     ] [ f ] if ;
 
 :: paint-chunk ( chunk loc -- )
@@ -106,24 +117,6 @@ PRIVATE>
     [ add-slots ]
     [ paint-chunk ] } 2cleave ;
 
-: starting-chunk ( -- chunk ) 0 chunks nth ;
-
-: upstairs-chunk ( -- chunk ) 7 chunks nth ;
-
-: downstairs-chunk ( -- chunk ) 8 chunks nth ;
-
-: random-slot ( z -- loc slot ) level-slots >alist
-    [ f f ] [ random first2 ] if-empty ;
-
-: level-chunks ( z -- chunk-assoc )
-    get-placed  [ drop third over = ] assoc-filter nip ;
-
-:: level-border ( z -- locs )
-    z level-chunks :> chunks
-    chunks keys
-    [ horizontal-6-dirs [ over v+ ] map nip ] map concat <hash-set>
-    chunks keys sets:diff >array ;
-
 : open-cells ( loc -- seq )
     [ { 0 0 } chunk-dim rect-iota [ terrain-at can-walk-terrain? ] filter ]
     make-area ;
@@ -148,36 +141,47 @@ PRIVATE>
         } cond
     ] make-area ;
 
-:: ground-chunk ( z -- )
-    z random-slot :> ( loc slot )
-    chunks [ slot fits-in-slot? ] filter
-    [ vertical-edge-open? not ] filter
-    [ random loc place-chunk loc spawn-mobs ] unless-empty ;
-
-:: stairwell ( z -- )
-    z random-slot drop :> upstairs-loc
-    upstairs-chunk upstairs-loc place-chunk
-    downstairs-chunk upstairs-loc { 0 0 -1 } v+ place-chunk
-    ;
-
-:: cover-edges ( z -- )
-    z level-border :> border
-    border [ edge-chunk swap place-chunk ] each ;
-
 CONSTANT: chunks-per-level 32
 
-:: generate-level ( z -- )
-    ! Generate ground chunks
-    chunks-per-level [ z ground-chunk ] times
-    z -8 > [ z stairwell ] when
-    z cover-edges ;
+: perimeter ( shape -- seq )
+    dup [ { [ northeast v+ over member? ] [ southeast v+ over member? ]
+            [ southwest v+ over member? ] [ northwest v+ over member? ] } 1&& not ]
+            filter nip ;
+
+:: generate-region ( placed-chunks shape biome -- placed-chunks )
+    placed-chunks clone :> old-placed
+    f :> new-placed!
+    shape length :> num-chunks
+    placed-chunks shape biome <mapgen> [
+        shape perimeter [ gen-slot drop ] each
+        num-chunks [
+            slots keys random :> slot-loc
+            slot-loc [
+                slot-loc slots at :> slot
+                ! Try to find a fitting chunk.
+                ! First try regular chunks.
+                current-biome biome-chunks [ slot fits-in-slot? ] filter
+                ! Then try extra chunks for connectivity.
+                [ current-biome biome-extra-chunks [ slot fits-in-slot? ] filter ] when-empty
+                ! Finally revert to an universal fallback chunk.
+                [ fallback-chunk 1array ] when-empty
+                random slot-loc place-chunk ] when
+        ] times
+        get-placed new-placed!
+    ] with-mapgen
+    ! new-placed keys old-placed keys sets:diff :> new-locs
+    ! TODO: Paint terrain for new-locs here.
+    new-placed ;
 
 :: init-world ( -- )
     <overworld-graph> :> overworld
     overworld generate-overworld
-    <placed-chunks> f f <mapgen> [
-        starting-chunk starting-loc place-chunk
-        0 -8 [a,b] [ generate-level ] each
-    ] with-mapgen
+    overworld edges overworld vertices append :> perimeter
+    overworld faces :> regions
+    perimeter <placed-chunks>
+    [ [ 0 swap chunk-locs ] [ overworld at ] bi generate-region ] reduce
+    regions swap
+    [ [ 0 swap chunk-locs ] [ overworld at ] bi generate-region ] reduce
+    drop
     ! Player in center
     starting-loc [ pc { 2 2 } spawn ] make-area ;

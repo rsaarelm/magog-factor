@@ -24,6 +24,8 @@ CONSTANT: starting-loc { 0 0 0 }
 
 : opposite ( dir -- opposite ) -1 v*n ;
 
+: horizontal? ( dir -- ? ) third 0 = ;
+
 : north-edge ( chunk -- edge ) { 0 0 } swap at ;
 
 : ne-edge ( chunk -- edge ) chunk-dim first iota
@@ -93,3 +95,9 @@ MEMO: edge ( chunk dir -- edge ) {
 
 : vertical-edge-open? ( chunk -- ? )
     { [ up edge open? ] [ down edge open? ] } 1|| ;
+
+: edges-match? ( e1 e2 -- ? )
+    { [ = ]
+      ! Char ? serves as a wild card in edges.
+      [ zip [ [ first2 = ] [ CHAR: ? swap member? ] bi or ] all? ]
+    } 2|| ;

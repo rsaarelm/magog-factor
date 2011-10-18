@@ -96,7 +96,8 @@ CONSTANT: s-vertex-offset { 1 3 }
 
 PRIVATE>
 
-: chunk-locs ( hexgraph-key -- seq )
+<PRIVATE
+: (chunk-locs) ( hexgraph-key -- seq )
     [ [ floor ] map chunk-translate ] [ [ 4 * 4 rem ] map ] bi
     { { face-offset [ face-locs ] }
       { e-edge-offset [ e-edge-locs ] }
@@ -107,11 +108,7 @@ PRIVATE>
       [ "Invalid hexgraph key" throw ]
     } case
     swap [ v+ ] curry map ;
+PRIVATE>
 
-! The ring of chunk locs surrounding the central face of the region. Should be
-! the union of the borders and corners of the face.
-: perimeter ( region-loc -- chunk-loc-seq )
-    chunk-translate region-radius hex-circle [ over v+ ] map nip ;
-
-: inside-perimeter ( region-loc -- chunk-loc-seq )
-    chunk-translate region-radius 1 - hex-circle [ over v+ ] map nip ;
+: chunk-locs ( z hexgraph-key -- seq )
+    (chunk-locs) [ over suffix ] map nip ;
