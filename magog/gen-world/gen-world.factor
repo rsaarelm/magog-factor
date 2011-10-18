@@ -17,21 +17,26 @@ TUPLE: slot edges ;
 
 : <slot> ( -- slot ) H{ } clone slot boa ;
 
-TUPLE: mapgen placed-nodes slots ;
+: <placed-chunks> ( -- placed-chunks ) H{ } clone ;
 
-: <mapgen> ( -- mapgen )
-    H{ } clone H{ } clone mapgen boa
+TUPLE: mapgen shape biome slots ;
+
+: <mapgen> ( shape biome -- mapgen )
+    H{ } clone mapgen boa
     <slot> starting-loc pick slots>> set-at ;
 
 SYMBOL: +mapgen+
+SYMBOL: +placed-chunks+
 
 : get-mapgen ( -- mapgen ) +mapgen+ get ;
 
-: clear? ( loc -- ? ) get-mapgen placed-nodes>> key? not ;
+: get-placed ( -- placed-chunks ) +placed-chunks+ get ;
+
+: clear? ( loc -- ? ) get-placed key? not ;
 
 :: set-initial-edges ( slot loc -- )
     dirs [| dir |
-        loc dir v+ get-mapgen placed-nodes>> at
+        loc dir v+ get-placed at
         [ dir opposite edge dir slot edges>> set-at ] when*
     ] each ;
 
@@ -59,8 +64,8 @@ SYMBOL: +mapgen+
 
 PRIVATE>
 
-: with-mapgen ( quot -- )
-    [ <mapgen> +mapgen+ set call ] with-scope ; inline
+: with-mapgen ( placed-chunks mapgen quot -- )
+    [ [ +mapgen+ set +placed-chunks+ set ] dip call ] with-scope ; inline
 
 : new-chunk-sites ( -- locs ) slots keys ;
 
@@ -96,7 +101,7 @@ PRIVATE>
     ] make-area ;
 
 : place-chunk ( chunk loc -- ) {
-    [ get-mapgen placed-nodes>> set-at ]
+    [ get-placed set-at ]
     [ get-mapgen slots>> delete-at drop ]
     [ add-slots ]
     [ paint-chunk ] } 2cleave ;
@@ -111,7 +116,7 @@ PRIVATE>
     [ f f ] [ random first2 ] if-empty ;
 
 : level-chunks ( z -- chunk-assoc )
-    get-mapgen placed-nodes>> [ drop third over = ] assoc-filter nip ;
+    get-placed  [ drop third over = ] assoc-filter nip ;
 
 :: level-border ( z -- locs )
     z level-chunks :> chunks
@@ -168,9 +173,9 @@ CONSTANT: chunks-per-level 32
     z cover-edges ;
 
 :: init-world ( -- )
-    [
-        <overworld-graph> :> overworld
-        overworld generate-overworld
+    <overworld-graph> :> overworld
+    overworld generate-overworld
+    <placed-chunks> f f <mapgen> [
         starting-chunk starting-loc place-chunk
         0 -8 [a,b] [ generate-level ] each
     ] with-mapgen
