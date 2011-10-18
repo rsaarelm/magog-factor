@@ -1,5 +1,7 @@
 ! Copyright (C) 2011 Risto Saarelma
 
+QUALIFIED-WITH: magog.gen-world.biome biome
+
 USING: arrays assocs combinators dust.hex dust.hexgraph kernel literals locals
 math math.functions math.matrices math.vectors math.vectors.simd noise
 sequences ;
@@ -9,16 +11,11 @@ IN: magog.overworld
 ! In regions
 CONSTANT: overworld-radius 7
 
-! In chunks, evaluated at parse time so that we can use it in constants later.
+! Region radius in chunks, evaluated at parse time so that we can use it in
+! constants later.
 <<
 CONSTANT: region-radius 5
 >>
-
-CONSTANT: ocean-region "ocean"
-CONSTANT: beach-region "beach"
-CONSTANT: grass-region "grass"
-CONSTANT: forest-region "forest"
-CONSTANT: mountain-region "mountain"
 
 <PRIVATE
 
@@ -39,10 +36,10 @@ CONSTANT: region-to-chunk-transform
 :: generate-terrain ( hexgraph -- )
     <perlin-noise-table> :> table
     hexgraph faces [ hexgraph on-edge? ] partition :> ( edge inner )
-    edge [ [ ocean-region ] dip hexgraph set-at ] each
+    edge [ [ biome:ocean ] dip hexgraph set-at ] each
     inner [| loc |
         table loc loc>perlin perlin-noise loc noise-adjust + 0 >
-          [ grass-region ] [ ocean-region ] if
+          [ biome:grassland ] [ biome:ocean ] if
         loc hexgraph set-at ] each ;
 
 ! XXX: Just picking an arbitrary face to fill the edge as, make a more
