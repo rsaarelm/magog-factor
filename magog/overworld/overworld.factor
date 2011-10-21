@@ -38,8 +38,11 @@ CONSTANT: region-to-chunk-transform
     hexgraph faces [ hexgraph on-edge? ] partition :> ( edge inner )
     edge [ [ biome:ocean ] dip hexgraph set-at ] each
     inner [| loc |
-        table loc loc>perlin perlin-noise loc noise-adjust + 0 >
-          [ biome:grassland ] [ biome:ocean ] if
+        table loc loc>perlin perlin-noise loc noise-adjust +
+        { { [ dup .6 > ] [ biome:mountain ] }
+          { [ dup .3 > ] [ biome:forest ] }
+          { [ dup 0 > ] [ biome:grassland ] }
+          [ biome:ocean ] } cond nip
         loc hexgraph set-at ] each ;
 
 ! XXX: Just picking an arbitrary face to fill the edge as, make a more

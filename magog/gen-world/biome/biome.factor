@@ -19,6 +19,7 @@ IN: magog.gen-world.biome
       { ">" [ tile:slope3 ] }
       { "J" [ tile:slope4 ] }
       { "V" [ tile:slope5 ] }
+      [ drop f ]
     } case ;
 
 PRIVATE>
@@ -36,6 +37,8 @@ GENERIC: biome-tile ( char biome -- tile )
 SINGLETON: ocean
 
 SINGLETON: grassland
+
+SINGLETON: forest
 
 SINGLETON: mountain
 
@@ -55,9 +58,27 @@ M: grassland biome-extra-chunks drop water-ground-chunks ;
 
 M: grassland biome-tile drop
     { { "." [ tile:grass ] }
+      { "#" [ tile:sand ] }
+      [ default-tileset ] } case ;
+
+M: forest default-edge drop "11111" ;
+
+M: forest biome-chunks drop natural-chunks ;
+
+M: forest biome-extra-chunks drop water-ground-chunks ;
+
+M: forest biome-tile drop
+    { { "." [ tile:grass ] }
       { "#" [ tile:tree ] }
       [ default-tileset ] } case ;
 
-M: mountain default-edge drop "00000" ;
+M: mountain default-edge drop "11111" ;
 
-! TODO: mountain stuff
+M: mountain biome-chunks drop natural-chunks ;
+
+M: mountain biome-extra-chunks drop f ;
+
+M: mountain biome-tile drop
+    { { "." [ tile:sand ] }
+      { "#" [ tile:rock ] }
+      [ default-tileset ] } case ;

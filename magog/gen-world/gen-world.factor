@@ -91,21 +91,11 @@ PRIVATE>
     loc third :> z
     loc [ chunk strip-annotations [| loc char |
         char {
-            { "." [ z 0 = tile:grass tile:floor ? loc terrain ] }
-            { "#" [ z 0 = tile:tree tile:wall ? loc terrain ] }
-            { "*" [ z 0 = tile:rock tile:wall ? loc terrain ] }
-            { "~" [ tile:water loc terrain ] }
-            { "<" [ tile:slope0 loc terrain ] }
-            { "P" [ tile:slope1 loc terrain ] }
-            { "A" [ tile:slope2 loc terrain ] }
-            { ">" [ tile:slope3 loc terrain ] }
-            { "J" [ tile:slope4 loc terrain ] }
-            { "V" [ tile:slope5 loc terrain ] }
             { "z" [ tile:floor loc terrain
                     { 0 0 } area-below loc portal ] }
             { "y" [ tile:floor loc terrain
                     { 0 0 } area-above loc portal ] }
-            [ drop ]
+            [ current-biome biome-tile [ loc terrain ] when* ]
         } case
     ] assoc-each
     chunk-dim first current-rect-edge-portals
