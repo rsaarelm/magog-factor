@@ -51,7 +51,9 @@ M: ocean biome-chunks drop water-chunks ;
 
 M: ocean biome-extra-chunks drop water-ground-chunks ;
 
-M: ocean biome-tile drop default-tileset ;
+M: ocean biome-tile drop
+    { { "." [ tile:sand ] }
+      [ default-tileset ] } case ;
 
 M: grassland default-edge drop "11111" ;
 
