@@ -174,4 +174,4 @@ CONSTANT: chunks-per-level 32
     [ [ 0 swap chunk-locs ] [ overworld at ] bi generate-region ] reduce
     drop
     ! Player in center
-    starting-loc [ pc { 2 2 } spawn ] make-area ;
+    starting-loc [ pc starting-loc open-cells random spawn ] make-area ;
