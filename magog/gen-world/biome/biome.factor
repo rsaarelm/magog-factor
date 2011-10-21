@@ -2,7 +2,8 @@
 
 QUALIFIED-WITH: magog.tile tile
 
-USING: combinators kernel magog.gen-world.chunks ;
+USING: classes.parser classes.singleton classes.union combinators kernel lexer
+magog.gen-world.chunks ;
 
 IN: magog.gen-world.biome
 
@@ -34,13 +35,15 @@ GENERIC: biome-extra-chunks ( biome -- chunks )
 
 GENERIC: biome-tile ( char biome -- tile )
 
-SINGLETON: ocean
+<<
+! Make each biome into a singleton class and make the union-class "biome"
+! encompass them all.
+SYNTAX: BIOMES:
+    ";" [ create-class-in dup define-singleton-class ] map-tokens
+    [ "biome" create-class-in ] dip define-union-class ;
+>>
 
-SINGLETON: grassland
-
-SINGLETON: forest
-
-SINGLETON: mountain
+BIOMES: ocean grassland forest mountain ;
 
 M: ocean default-edge drop "~~~~~" ;
 
