@@ -45,16 +45,16 @@ CONSTANT: region-to-chunk-transform
           [ biome:ocean ] } cond nip
         loc hexgraph set-at ] each ;
 
-! XXX: Just picking an arbitrary face to fill the edge as, make a more
-! detailed rule for this later.
+: choose-perimeter-biome ( connected-region-biomes -- biome ) supremum ;
+
 :: fill-borders ( hexgraph -- )
     hexgraph edges [| edge |
-        edge hexgraph sides first hexgraph at
+        edge hexgraph sides choose-perimeter-biome hexgraph at
         edge hexgraph set-at ] each ;
 
 :: fill-corners ( hexgraph -- )
     hexgraph vertices [| vertex |
-        vertex hexgraph touching first hexgraph at
+        vertex hexgraph touching choose-perimeter-biome hexgraph at
         vertex hexgraph set-at ] each ;
 
 PRIVATE>
