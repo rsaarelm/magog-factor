@@ -63,10 +63,8 @@ SYMBOL: +placed-chunks+
 :: add-slots ( chunk loc -- )
     dirs [| dir |
         chunk dir edge :> edge
-        edge open?
-        [ loc dir v+ gen-slot :> slot
-          slot [ edge dir opposite slot edges>> set-at ] when
-        ] when
+        loc dir v+ gen-slot :> slot
+        slot [ edge dir opposite slot edges>> set-at ] when
     ] each ;
 
 : slots ( -- slots ) get-mapgen slots>> ;
