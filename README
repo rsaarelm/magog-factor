@@ -1,3 +1,8 @@
+This is the abandoned Factor-language version of Magog. The successor written
+in Rust lives in https://github.com/rsaarelm/magog
+
+----
+
 Magog is a roguelike game.
 
 = Running the game =
